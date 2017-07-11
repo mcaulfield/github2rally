@@ -33,6 +33,7 @@ type Defect struct {
 	ScheduleState string `json:"ScheduleState,omitempty"`
 	State         string `json:"State,omitempty"`
 	SubmittedBy   *Ref   `json:"SubmittedBy,omitempty"`
+	Description   string `json:"Description,omitempty"`
 }
 
 type Ref struct {

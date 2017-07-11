@@ -77,6 +77,7 @@ func SyncDefects(rallyApiKey string, owner string, repo string) {
 		}
 		d.ScheduleState = "Defined"
 		d.State = "Submitted"
+		d.Description = *issue.HTMLURL
 
 		// Create new rally defect
 		err = rc.CreateDefect(&d)
