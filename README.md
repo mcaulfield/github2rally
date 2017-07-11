@@ -12,13 +12,21 @@ Usage of github2rally:
         CA Agile Central (Rally) API Key
 ```
 
+## Getting Started
+
+1. [Install go 1.8 or later](https://golang.org/doc/install) (and make sure $GOPATH/bin is on your $PATH)
+2. `go get -u github.com/mcaulfield/github2rally`
+3. [Request a CA Agile Central (Rally) API Key](https://rally1.rallydev.com/login/accounts/index.html#/keys)
+4. Set your default workspace and project in Rally profile settings
+5. Run `github2rally --github-owner <username or org> --github-repo <repo name> --rally-api-key <key from step 3>`
+
 ## Syncing Submitter and Assignee Fields
 
 Correlating Github users and Rally users requires that each Rally user set their Middle Name field in their profile to match their github username.
 
-## To-do
-- [X] Set assignee field when Defect is created
-- [X] Update Defect when title or assignee changes
-- [X] Link to github issue in Defect description
-- [ ] Allow user to set Rally workspace
-- [X] Fix check for github issue number to disambiguate multiple results
+## Todo
+
+- [ ] Configurable Rally workspace/project
+- [ ] Configurable Github credentials
+- [ ] Support config file and env vars for config
+
