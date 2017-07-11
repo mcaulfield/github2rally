@@ -5,7 +5,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github2rally/sync"
+	"github.com/mcaulfield/github2rally/sync"
 	"os"
 )
 

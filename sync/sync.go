@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/go-github/github"
-	"github2rally/rally"
+	"github.com/mcaulfield/github2rally/rally"
 	"log"
 	"os"
 	"regexp"
