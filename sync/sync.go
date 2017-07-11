@@ -9,6 +9,7 @@ import (
 	"github2rally/rally"
 	"log"
 	"os"
+	"regexp"
 )
 
 // SyncDefects copies github issues to rally defects.
@@ -24,67 +25,76 @@ func SyncDefects(rallyApiKey string, owner string, repo string) {
 		log.Fatal(err)
 		os.Exit(1)
 	}
+
+	// Create matching defects in Rally or update existing
 	for _, issue := range issues {
-
-		// Query rally for a matching defect
-		q := fmt.Sprintf("(Name contains #%v)", *issue.Number)
-		qr, err := rc.QueryDefect(q)
+		newDefect := constructDefect(rc, issue)
+		existingDefect := findDefect(rc, newDefect)
+		if existingDefect == nil {
+			log.Println("Adding new defect to Rally: ", newDefect.Name)
+			err = rc.CreateDefect(newDefect)
+		} else {
+			log.Println("Updating existing defect in Rally: ", newDefect.Name)
+			err = rc.UpdateDefect(existingDefect, newDefect)
+		}
 		if err != nil {
 			log.Println(err)
-			continue
 		}
-		if qr.Count != 0 {
-			log.Println("Defect already exists in Rally:", *issue.Title, qr.Results[0].Ref)
-			continue
-		}
-		log.Println("Adding new Defect to Rally:", *issue.Title)
-
-		// Query rally for a user that matches the github issue user
-		submitter := ""
-		if issue.User != nil {
-			q = fmt.Sprintf("(MiddleName = %v)", *issue.User.Login)
-			qr, err = rc.QueryUser(q)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			if qr.Count != 0 {
-				submitter = qr.Results[0].Ref
-			}
-		}
-
-		// Query rally for a user that matches the github assignee
-		assignee := ""
-		if issue.Assignee != nil {
-			q = fmt.Sprintf("(MiddleName = %v)", *issue.Assignee.Login)
-			qr, err = rc.QueryUser(q)
-			if err != nil {
-				log.Println(err)
-			}
-			if qr.Count != 0 {
-				assignee = qr.Results[0].Ref
-			}
-		}
-
-		// Construct a new defect struct
-		d := rally.Defect{}
-		d.Name = fmt.Sprintf("%s #%v", *issue.Title, *issue.Number)
-		if submitter != "" {
-			d.SubmittedBy = &rally.Ref{Ref: submitter, Type: "User"}
-		}
-		if assignee != "" {
-			d.Owner = &rally.Ref{Ref: assignee, Type: "User"}
-		}
-		d.ScheduleState = "Defined"
-		d.State = "Submitted"
-		d.Description = *issue.HTMLURL
-
-		// Create new rally defect
-		err = rc.CreateDefect(&d)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		log.Println("Added new Defect: ", d)
 	}
+}
+
+func constructDefect(rc *rally.Client, issue *github.Issue) *rally.Defect {
+	// Query rally for users that match submitter and assignee
+	submitter := matchUser(rc, issue.User)
+	assignee := matchUser(rc, issue.Assignee)
+
+	// Construct a new defect struct
+	d := rally.Defect{}
+	d.Name = fmt.Sprintf("%s #%v", *issue.Title, *issue.Number)
+	if submitter != "" {
+		d.SubmittedBy = &rally.Ref{URL: submitter, Type: "User"}
+	}
+	if assignee != "" {
+		d.Owner = &rally.Ref{URL: assignee, Type: "User"}
+	}
+	d.Description = *issue.HTMLURL
+	return &d
+}
+
+func matchUser(rc *rally.Client, user *github.User) string {
+	if user == nil {
+		return ""
+	}
+	// Map github usernames to rally users by relying on a matching Middle Name
+	q := fmt.Sprintf("(MiddleName = %v)", *user.Login)
+	qr, err := rc.QueryUser(q)
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+	if qr.Count == 0 {
+		return ""
+	}
+	return qr.Results[0].URL
+}
+
+func findDefect(rc *rally.Client, d *rally.Defect) *rally.Ref {
+	re := regexp.MustCompile("#[0-9]+")
+	newNum := re.FindString(d.Name)
+	q := fmt.Sprintf("(Name contains %v)", newNum)
+	qr, err := rc.QueryDefect(q)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	if qr.Count == 0 {
+		return nil
+	}
+	for _, ref := range qr.Results {
+		oldNum := re.FindString(ref.Name)
+		if oldNum == newNum {
+			return &ref
+		}
+	}
+	return nil
 }

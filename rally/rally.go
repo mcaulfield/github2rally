@@ -37,8 +37,9 @@ type Defect struct {
 }
 
 type Ref struct {
-	Ref  string `json:"_ref,omitempty"`
+	URL  string `json:"_ref,omitempty"`
 	Type string `json:"_type,omitempty"`
+	Name string `json:"_refObjectName,omitempty"`
 }
 
 type Client struct {
@@ -86,13 +87,18 @@ func (c *Client) query(typ string, q string) (*QueryResult, error) {
 
 // CreateDefect sends a POST request to create a new Defect in Rally.
 func (c *Client) CreateDefect(d *Defect) error {
+	ref := Ref{URL: fmt.Sprintf("%v/defect/create", baseUrl)}
+	return c.UpdateDefect(&ref, d)
+}
+
+// UpdateDefect sends a POST request to update an existing Defect in Rally.
+func (c *Client) UpdateDefect(ref *Ref, d *Defect) error {
 	de := defectEnvelope{Defect: *d}
 	buf, err := json.Marshal(de)
 	if err != nil {
 		return err
 	}
-	postUrl := fmt.Sprintf("%v/defect/create", baseUrl)
-	req, err := http.NewRequest("POST", postUrl, bytes.NewReader(buf))
+	req, err := http.NewRequest("POST", ref.URL, bytes.NewReader(buf))
 	if err != nil {
 		return err
 	}

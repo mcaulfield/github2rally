@@ -18,7 +18,7 @@ Correlating Github users and Rally users requires that each Rally user set their
 
 ## To-do
 - [X] Set assignee field when Defect is created
-- [ ] Update Defect when title or assignee changes
+- [X] Update Defect when title or assignee changes
 - [X] Link to github issue in Defect description
 - [ ] Allow user to set Rally workspace
-- [ ] Fix check for github issue number to disambiguate multiple results
+- [X] Fix check for github issue number to disambiguate multiple results
