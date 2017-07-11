@@ -29,4 +29,5 @@ Correlating Github users and Rally users requires that each Rally user set their
 - [ ] Configurable Rally workspace/project
 - [ ] Configurable Github credentials
 - [ ] Support config file and env vars for config
-
+- [ ] Github Enterprise integration
+- [ ] File-based Github to Rally username conversion table
