@@ -28,6 +28,9 @@ func SyncDefects(rallyApiKey string, owner string, repo string) {
 
 	// Create matching defects in Rally or update existing
 	for _, issue := range issues {
+		if issue.PullRequestLinks != nil {
+			continue
+		}
 		newDefect := constructDefect(rc, issue)
 		existingDefect := findDefect(rc, newDefect)
 		if existingDefect == nil {
